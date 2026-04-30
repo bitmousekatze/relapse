@@ -4,6 +4,8 @@ Tiny two-script setup for turning a git repo's history into a captioned
 timelapse video. Born out of the [HART](https://github.com/) project — hence
 the name — but works on any git repo.
 
+**Site:** https://bitmousekatze.github.io/hartlapse/
+
 Two steps:
 
 1. **`timelapse.sh`** — runs [Gource](https://gource.io/) over your repo and
@@ -28,7 +30,7 @@ gource --help >/dev/null && ffmpeg -version >/dev/null && echo OK
 ## Usage
 
 ```bash
-git clone https://github.com/<you>/hartlapse.git
+git clone https://github.com/bitmousekatze/hartlapse.git
 cd hartlapse
 chmod +x timelapse.sh overlay.sh
 

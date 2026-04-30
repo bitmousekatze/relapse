@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>hartlapse — git history timelapses, with captions</title>
+<meta name="description" content="Two bash scripts that turn any git repo's commit history into a captioned timelapse video. Gource + ffmpeg." />
+<meta property="og:title" content="hartlapse" />
+<meta property="og:description" content="Turn any git repo's history into a captioned timelapse video. Gource + ffmpeg." />
+<meta property="og:type" content="website" />
+<style>
+  :root {
+    --bg: #0e0e10;
+    --panel: #16161a;
+    --ink: #ececf1;
+    --muted: #9a9aa8;
+    --accent: #ff5e5b;
+    --accent-2: #5bc0eb;
+    --good: #7bd389;
+    --warn: #f0c419;
+    --line: #2a2a32;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  header {
+    padding: 64px 8% 48px;
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(ellipse at top right, rgba(255, 94, 91, 0.12), transparent 60%),
+      radial-gradient(ellipse at bottom left, rgba(91, 192, 235, 0.10), transparent 60%),
+      linear-gradient(180deg, #18181d 0%, #0e0e10 100%);
+    text-align: center;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .logo .dot {
+    width: 10px; height: 10px; border-radius: 99px;
+    background: var(--accent);
+    box-shadow: 0 0 16px var(--accent);
+  }
+  h1 {
+    font-size: 3.4rem;
+    margin: 0 0 12px;
+    letter-spacing: -0.03em;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .tagline {
+    font-size: 1.2rem;
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto 28px;
+  }
+  .cta {
+    display: inline-flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn {
+    display: inline-block;
+    padding: 12px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: transform 0.15s, border-color 0.15s, background 0.15s;
+    border: 1px solid var(--line);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #1a0a0a;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { transform: translateY(-1px); background: #ff7370; }
+  .btn-ghost { background: transparent; color: var(--ink); }
+  .btn-ghost:hover { border-color: var(--accent-2); color: var(--accent-2); }
+
+  main { padding: 48px 8% 64px; max-width: 1100px; margin: 0 auto; }
+  h2 {
+    font-size: 1.4rem;
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    color: var(--accent-2);
+  }
+  h3 { color: var(--accent); margin-top: 24px; font-size: 1.05rem; }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+  }
+  code, .mono {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    background: #0a0a0c;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--good);
+    font-size: 0.9em;
+  }
+  pre {
+    background: #0a0a0c;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    color: var(--good);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+  pre .comment { color: var(--muted); }
+  pre .cmd { color: var(--accent-2); }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .card {
+    background: #14141a;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .card .step {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    color: var(--accent);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .card h4 { margin: 0 0 8px; color: var(--accent-2); font-size: 1rem; }
+  .card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  tr:hover td { background: #1c1c22; }
+
+  .callout {
+    border-left: 3px solid var(--accent-2);
+    background: #131b22;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 12px 0;
+    font-size: 0.92rem;
+  }
+
+  footer {
+    padding: 32px 8%;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--line);
+  }
+  footer a { color: var(--accent-2); text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+
+  @media (max-width: 720px) {
+    h1 { font-size: 2.4rem; }
+    .grid-3 { grid-template-columns: 1fr; }
+    header { padding: 48px 6% 36px; }
+    main { padding: 32px 6% 48px; }
+    section { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="dot"></span>
+    <span>hartlapse</span>
+  </div>
+  <h1>Tell your project's story.</h1>
+  <p class="tagline">
+    Two tiny bash scripts that turn any git repo's commit history into a
+    captioned timelapse video. Gource + ffmpeg, no config files.
+  </p>
+  <div class="cta">
+    <a class="btn btn-primary" href="https://github.com/bitmousekatze/hartlapse">View on GitHub</a>
+    <a class="btn btn-ghost" href="#quickstart">Quickstart</a>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <h2>What it does</h2>
+    <p>
+      Point it at a git repo. It runs <code>gource</code> to animate the commit
+      history, pipes the frames through <code>ffmpeg</code>, and (optionally)
+      burns captions you write yourself onto the result. The captions are the
+      part that turns "watch some files appear" into a story.
+    </p>
+    <div class="grid-3">
+      <div class="card">
+        <div class="step">STEP 1</div>
+        <h4>timelapse.sh</h4>
+        <p>Gource walks the commit graph; ffmpeg encodes 1080p mp4. Tunable via env vars (resolution, fps, seconds-per-day).</p>
+      </div>
+      <div class="card">
+        <div class="step">STEP 2</div>
+        <h4>captions.txt</h4>
+        <p>One line per caption: <code>unix_ts|text</code>. Pulled straight from <code>git log --format='%ct|%s'</code> if you want.</p>
+      </div>
+      <div class="card">
+        <div class="step">STEP 3</div>
+        <h4>overlay.sh</h4>
+        <p>Builds an SRT, burns subtitles into the video at the right moments. Stop after step 1 if you don't want captions.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="quickstart">
+    <h2>Quickstart</h2>
+    <p>You need <code>gource</code>, <code>ffmpeg</code>, and <code>bash</code> (git-bash works on Windows).</p>
+<pre><span class="comment"># clone hartlapse</span>
+<span class="cmd">git clone</span> https://github.com/bitmousekatze/hartlapse.git
+<span class="cmd">cd</span> hartlapse
+<span class="cmd">chmod</span> +x timelapse.sh overlay.sh
+
+<span class="comment"># 1. render the gource animation</span>
+./timelapse.sh /path/to/your/repo my_project.mp4
+
+<span class="comment"># 2. (optional) edit captions.txt, then burn them in</span>
+./overlay.sh my_project.mp4 captions.txt my_project_final.mp4</pre>
+
+    <div class="callout">
+      <strong>Using Claude Code?</strong> The repo includes a
+      <code>CLAUDE.md</code> that teaches Claude the full workflow — picking
+      a sensible <code>SECONDS_PER_DAY</code> from your repo's history span,
+      proposing caption candidates from <code>git log</code>, and avoiding
+      the common pitfalls. Just open the cloned folder in Claude Code and
+      say "make a timelapse of this repo."
+    </div>
+  </section>
+
+  <section>
+    <h2>Captions</h2>
+    <p>
+      <code>captions.txt</code> is plain text — one caption per line, format
+      <code>unix_timestamp|caption text</code>. Lines starting with
+      <code>#</code> are ignored. The first timestamp anchors t=0 in the
+      video; later captions appear at the matching moment in the gource
+      animation, scaled by <code>SECONDS_PER_DAY</code>.
+    </p>
+<pre>1774821600|Project kickoff
+1775426400|Major redesign
+1776031200|New feature shipped
+1776636000|v1.0 launch</pre>
+    <p>Get a timestamp for any commit:</p>
+<pre><span class="cmd">git log</span> --format=<span style="color:var(--warn)">"%ct|%s"</span> &lt;hash&gt; -1</pre>
+  </section>
+
+  <section>
+    <h2>Tuning</h2>
+    <p>Both scripts read environment variables. Defaults are sensible.</p>
+    <h3>timelapse.sh</h3>
+    <table>
+      <tr><th>var</th><th>default</th><th>what it does</th></tr>
+      <tr><td><code>WIDTH</code> / <code>HEIGHT</code></td><td>1920 / 1080</td><td>output resolution</td></tr>
+      <tr><td><code>SECONDS_PER_DAY</code></td><td>1</td><td>how fast time moves — bump up for short histories</td></tr>
+      <tr><td><code>FPS</code></td><td>60</td><td>output framerate</td></tr>
+      <tr><td><code>HIDE</code></td><td><code>filenames,mouse,progress</code></td><td>gource <code>--hide</code> values</td></tr>
+      <tr><td><code>TITLE</code></td><td>repo folder name</td><td>shown in the gource header</td></tr>
+    </table>
+    <h3>overlay.sh</h3>
+    <table>
+      <tr><th>var</th><th>default</th><th>what it does</th></tr>
+      <tr><td><code>SECONDS_PER_DAY</code></td><td>1</td><td><strong>must match</strong> what timelapse.sh used</td></tr>
+      <tr><td><code>HOLD</code></td><td>4</td><td>seconds each caption stays on screen</td></tr>
+      <tr><td><code>FONT_SIZE</code></td><td>42</td><td>&nbsp;</td></tr>
+      <tr><td><code>BOX_OPACITY</code></td><td>0.55</td><td>background box opacity behind text (0 = off)</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Why it exists</h2>
+    <p>
+      hartlapse is a side-product of building <strong>HART</strong> — a
+      platform for human-made art. We wanted to show the project's growth as
+      a video, with captions calling out the moments that mattered. The
+      scripts were small enough to share, so here they are. MIT licensed.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  Made for <a href="https://github.com/bitmousekatze">@bitmousekatze</a> · MIT license ·
+  <a href="https://github.com/bitmousekatze/hartlapse">source on GitHub</a>
+</footer>
+
+</body>
+</html>
