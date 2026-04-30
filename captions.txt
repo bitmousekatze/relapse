@@ -1,0 +1,13 @@
+# captions.txt — one caption per line: unix_timestamp|caption text
+# Lines starting with # and blank lines are ignored.
+# The first timestamp anchors t=0 in the video; later captions appear at the
+# correct moment in the gource animation, scaled by SECONDS_PER_DAY.
+#
+# Get a unix timestamp for a commit:
+#   git log --format="%ct|%s" <hash> -1
+#
+# Example (delete and replace with your own):
+1774821600|Project kickoff
+1775426400|Major redesign
+1776031200|New feature shipped
+1776636000|v1.0 launch

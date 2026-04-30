@@ -1,0 +1,8 @@
+*.mp4
+*.mkv
+*.webm
+*.ppm
+*.log
+*.srt
+.DS_Store
+Thumbs.db
