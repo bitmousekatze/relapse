@@ -1,6 +1,6 @@
 # CLAUDE.md — instructions for Claude Code
 
-This repo is **hartlapse**: two bash scripts that turn a git repo's history
+This repo is **relapse**: two bash scripts that turn a git repo's history
 into a captioned timelapse video. When a user runs Claude Code in a clone of
 this repo, your job is to help them produce a finished video with minimum
 friction.
@@ -25,8 +25,8 @@ without asking — only stop for input where marked **ASK**.
    If either is missing, point them at the install links in README.md and stop.
 
 2. **Identify the target repo**. If the user is running Claude inside a
-   clone of hartlapse itself, **ASK** which repo they want to timelapse.
-   If they're running Claude inside the target repo and just have hartlapse
+   clone of relapse itself, **ASK** which repo they want to timelapse.
+   If they're running Claude inside the target repo and just have relapse
    alongside, use the current working directory.
 
 3. **Pick a sensible `SECONDS_PER_DAY`**. Get the history span:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hartlapse — burn captions onto a timelapse video.
+# relapse — burn captions onto a timelapse video.
 #
 # Reads captions.txt:  unix_timestamp|caption text
 # The first timestamp anchors t=0 in the video; later captions appear at
@@ -36,7 +36,7 @@ BOX_OPACITY="${BOX_OPACITY:-0.55}"
 
 # Build an SRT from captions.txt. Each caption: start = (ts - first_ts) scaled
 # by SECONDS_PER_DAY / 86400, end = start + HOLD.
-SRT="$(mktemp -t hartlapse.XXXXXX.srt)"
+SRT="$(mktemp -t relapse.XXXXXX.srt)"
 trap 'rm -f "$SRT"' EXIT
 
 awk -F'|' -v spd="$SECONDS_PER_DAY" -v hold="$HOLD" '
@@ -62,7 +62,7 @@ awk -F'|' -v spd="$SECONDS_PER_DAY" -v hold="$HOLD" '
   }
 ' "$CAPS" > "$SRT"
 
-echo ">>> hartlapse: burning captions"
+echo ">>> relapse: burning captions"
 echo "    input:    $IN"
 echo "    captions: $CAPS  ($(grep -c '^[0-9]' "$SRT") entries)"
 echo "    output:   $OUT"

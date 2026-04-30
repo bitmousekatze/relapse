@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hartlapse — render a Gource animation of a git repo's history.
+# relapse — render a Gource animation of a git repo's history.
 #
 # Usage:
 #   ./timelapse.sh <repo-path> [output.mp4]
@@ -30,7 +30,7 @@ FPS="${FPS:-60}"
 HIDE="${HIDE:-filenames,mouse,progress}"
 TITLE="${TITLE:-$(basename "$REPO")}"
 
-echo ">>> hartlapse: $TITLE"
+echo ">>> relapse: $TITLE"
 echo "    repo:   $REPO"
 echo "    output: $OUT  (${WIDTH}x${HEIGHT} @ ${FPS}fps)"
 
